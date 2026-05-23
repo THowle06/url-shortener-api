@@ -1,11 +1,63 @@
 import { Request, Response, NextFunction } from "express";
-import { getWelcome } from "../services/index.service";
+import {
+  createShortUrl as createShortUrlService,
+  getWelcome,
+} from "../services/index.service";
 import { StatusCodes } from "http-status-codes";
+
+function validateShortenBody(body: unknown): string[] {
+  const errors: string[] = [];
+
+  if (!body || typeof body !== "object") {
+    return ["Request body must be a JSON object"];
+  }
+
+  const url = (body as { url?: unknown }).url;
+
+  if (typeof url !== "string" || url.trim().length === 0) {
+    errors.push("url is required");
+    return errors;
+  }
+
+  try {
+    new URL(url);
+  } catch {
+    errors.push("url must be a valid URL");
+  }
+
+  return errors;
+}
 
 export function getRoot(req: Request, res: Response, next: NextFunction) {
   try {
     const payload = getWelcome();
     return res.status(StatusCodes.OK).json(payload);
+  } catch (err) {
+    return next(err);
+  }
+}
+
+export async function createShortUrl(
+  req: Request,
+  res: Response,
+  next: NextFunction,
+) {
+  try {
+    const errors = validateShortenBody(req.body);
+
+    if (errors.length > 0) {
+      return res.status(StatusCodes.BAD_REQUEST).json({ errors });
+    }
+
+    const record = await createShortUrlService(req.body.url);
+
+    return res.status(StatusCodes.CREATED).json({
+      id: record.id.toString(),
+      url: record.url,
+      shortCode: record.shortCode,
+      createdAt: record.createdAt,
+      updatedAt: record.updatedAt,
+    });
   } catch (err) {
     return next(err);
   }
