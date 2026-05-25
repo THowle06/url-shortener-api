@@ -46,3 +46,9 @@ export async function createShortUrl(url: string) {
     },
   });
 }
+
+export async function getShortUrlByCode(shortCode: string) {
+  return prisma.url.findUnique({
+    where: { shortCode },
+  });
+}

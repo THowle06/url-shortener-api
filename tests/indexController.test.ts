@@ -1,6 +1,10 @@
 import { Request, Response } from "express";
 import * as service from "../src/services/index.service";
-import { createShortUrl, getRoot } from "../src/controllers/index.controller";
+import {
+  createShortUrl,
+  getOriginalUrl,
+  getRoot,
+} from "../src/controllers/index.controller";
 import { beforeEach, describe, expect, it, jest } from "@jest/globals";
 
 describe("Index Controller", () => {
@@ -39,7 +43,7 @@ describe("Index Controller", () => {
 
     jest.spyOn(service, "createShortUrl").mockResolvedValue({
       id: 1,
-      url: "https://google.com",
+      url: "https://www.google.com",
       shortCode: "abc123",
       createdAt: new Date("2021-09-01T12:00:00Z"),
       updatedAt: new Date("2021-09-01T12:00:00Z"),
@@ -51,7 +55,7 @@ describe("Index Controller", () => {
     expect(res.status).toHaveBeenCalledWith(201);
     expect(res.json).toHaveBeenCalledWith({
       id: "1",
-      url: "https://google.com",
+      url: "https://www.google.com",
       shortCode: "abc123",
       createdAt: new Date("2021-09-01T12:00:00Z"),
       updatedAt: new Date("2021-09-01T12:00:00Z"),
@@ -73,6 +77,57 @@ describe("Index Controller", () => {
     expect(res.status).toHaveBeenCalledWith(400);
     expect(res.json).toHaveBeenCalledWith({
       errors: ["url must be a valid URL"],
+    });
+  });
+
+  it("retrieve original url by short code", async () => {
+    const req = {
+      params: { shortCode: "abc123" },
+    } as unknown as Request;
+
+    const res = {
+      status: jest.fn().mockReturnThis(),
+      json: jest.fn(),
+    } as unknown as Response;
+
+    jest.spyOn(service, "getShortUrlByCode").mockResolvedValue({
+      id: 1,
+      url: "https://www.google.com",
+      shortCode: "abc123",
+      createdAt: new Date("2021-09-01T12:00:00Z"),
+      updatedAt: new Date("2021-09-01T12:00:00Z"),
+      accessCount: 10,
+    });
+
+    await getOriginalUrl(req, res, jest.fn());
+
+    expect(res.status).toHaveBeenCalledWith(200);
+    expect(res.json).toHaveBeenCalledWith({
+      id: "1",
+      url: "https://www.google.com",
+      shortCode: "abc123",
+      createdAt: new Date("2021-09-01T12:00:00Z"),
+      updatedAt: new Date("2021-09-01T12:00:00Z"),
+    });
+  });
+
+  it("returns 404 when short coee is not found", async () => {
+    const req = {
+      params: { shortCode: "missing1" },
+    } as unknown as Request;
+
+    const res = {
+      status: jest.fn().mockReturnThis(),
+      json: jest.fn(),
+    } as unknown as Response;
+
+    jest.spyOn(service, "getShortUrlByCode").mockResolvedValue(null);
+
+    await getOriginalUrl(req, res, jest.fn());
+
+    expect(res.status).toHaveBeenCalledWith(404);
+    expect(res.json).toHaveBeenCalledWith({
+      message: "Short URL not found",
     });
   });
 });
