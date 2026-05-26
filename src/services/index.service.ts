@@ -52,3 +52,12 @@ export async function getShortUrlByCode(shortCode: string) {
     where: { shortCode },
   });
 }
+
+export async function updateShortUrlByCode(shortCode: string, url: string) {
+  return prisma.url.update({
+    where: { shortCode },
+    data: {
+      url,
+    },
+  });
+}

@@ -2,6 +2,7 @@ import { Request, Response, NextFunction } from "express";
 import {
   createShortUrl as createShortUrlService,
   getShortUrlByCode as getShortUrlByCodeService,
+  updateShortUrlByCode as updateShortUrlByCodeService,
   getWelcome,
 } from "../services/index.service";
 import { StatusCodes } from "http-status-codes";
@@ -92,6 +93,47 @@ export async function getOriginalUrl(
       shortCode: record.shortCode,
       createdAt: record.createdAt,
       updatedAt: record.updatedAt,
+    });
+  } catch (err) {
+    return next(err);
+  }
+}
+
+export async function updateShortUrl(
+  req: Request,
+  res: Response,
+  next: NextFunction,
+) {
+  try {
+    const { shortCode } = req.params;
+    const errors = validateShortenBody(req.body);
+
+    if (typeof shortCode !== "string" || shortCode.trim().length === 0) {
+      return res.status(StatusCodes.BAD_REQUEST).json({
+        message: "shortCode is required",
+      });
+    }
+
+    if (errors.length > 0) {
+      return res.status(StatusCodes.BAD_REQUEST).json({ errors });
+    }
+
+    const existing = await getShortUrlByCodeService(shortCode);
+
+    if (!existing) {
+      return res.status(StatusCodes.NOT_FOUND).json({
+        message: "Short URL not found",
+      });
+    }
+
+    const updated = await updateShortUrlByCodeService(shortCode, req.body.url);
+
+    return res.status(StatusCodes.OK).json({
+      id: updated.id.toString(),
+      url: updated.url,
+      shortCode: updated.shortCode,
+      createdAt: updated.createdAt,
+      updatedAt: updated.updatedAt,
     });
   } catch (err) {
     return next(err);
