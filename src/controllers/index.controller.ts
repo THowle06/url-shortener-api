@@ -173,3 +173,38 @@ export async function deleteShortUrl(
     return next(err);
   }
 }
+
+export async function getShortUrlStats(
+  req: Request,
+  res: Response,
+  next: NextFunction,
+) {
+  try {
+    const { shortCode } = req.params;
+
+    if (typeof shortCode !== "string" || shortCode.trim().length === 0) {
+      return res.status(StatusCodes.BAD_REQUEST).json({
+        message: "shortCode is required",
+      });
+    }
+
+    const record = await getShortUrlByCodeService(shortCode);
+
+    if (!record) {
+      return res.status(StatusCodes.NOT_FOUND).json({
+        message: "Short URL not found",
+      });
+    }
+
+    return res.status(StatusCodes.OK).json({
+      id: record.id.toString(),
+      url: record.url,
+      shortCode: record.shortCode,
+      createdAt: record.createdAt,
+      updatedAt: record.updatedAt,
+      accessCount: record.accessCount,
+    });
+  } catch (err) {
+    return next(err);
+  }
+}

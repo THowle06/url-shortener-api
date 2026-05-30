@@ -5,6 +5,7 @@ import {
   deleteShortUrl,
   getOriginalUrl,
   getRoot,
+  getShortUrlStats,
   updateShortUrl,
 } from "../src/controllers/index.controller";
 import { beforeEach, describe, expect, it, jest } from "@jest/globals";
@@ -253,6 +254,58 @@ describe("Index Controller", () => {
     jest.spyOn(service, "getShortUrlByCode").mockResolvedValue(null);
 
     await deleteShortUrl(req, res, jest.fn());
+
+    expect(res.status).toHaveBeenCalledWith(404);
+    expect(res.json).toHaveBeenCalledWith({
+      message: "Short URL not found",
+    });
+  });
+
+  it("returns short url statistics", async () => {
+    const req = {
+      params: { shortCode: "abc123" },
+    } as unknown as Request;
+
+    const res = {
+      status: jest.fn().mockReturnThis(),
+      json: jest.fn(),
+    } as unknown as Response;
+
+    jest.spyOn(service, "getShortUrlByCode").mockResolvedValue({
+      id: 1,
+      url: "https://www.google.com",
+      shortCode: "abc123",
+      createdAt: new Date("2021-09-01T12:00:00Z"),
+      updatedAt: new Date("2021-09-01T12:00:00Z"),
+      accessCount: 10,
+    });
+
+    await getShortUrlStats(req, res, jest.fn());
+
+    expect(res.status).toHaveBeenCalledWith(200);
+    expect(res.json).toHaveBeenCalledWith({
+      id: "1",
+      url: "https://www.google.com",
+      shortCode: "abc123",
+      createdAt: new Date("2021-09-01T12:00:00Z"),
+      updatedAt: new Date("2021-09-01T12:00:00Z"),
+      accessCount: 10,
+    });
+  });
+
+  it("returns 404 when short url stats are not found", async () => {
+    const req = {
+      params: { shortCode: "missing1" },
+    } as unknown as Request;
+
+    const res = {
+      status: jest.fn().mockReturnThis(),
+      json: jest.fn(),
+    } as unknown as Response;
+
+    jest.spyOn(service, "getShortUrlByCode").mockResolvedValue(null);
+
+    await getShortUrlStats(req, res, jest.fn());
 
     expect(res.status).toHaveBeenCalledWith(404);
     expect(res.json).toHaveBeenCalledWith({
