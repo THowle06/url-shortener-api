@@ -4,8 +4,8 @@ import {
   getShortUrlByCode as getShortUrlByCodeService,
   updateShortUrlByCode as updateShortUrlByCodeService,
   deleteShortUrlByCode as deleteShortUrlByCodeService,
+  incrementAccessCountByCode as incrementAccessCountByCodeService,
   getWelcome,
-  deleteShortUrlByCode,
 } from "../services/index.service";
 import { StatusCodes } from "http-status-codes";
 
@@ -88,6 +88,8 @@ export async function getOriginalUrl(
         message: "Short URL not found",
       });
     }
+
+    await incrementAccessCountByCodeService(shortCode);
 
     return res.status(StatusCodes.OK).json({
       id: record.id.toString(),

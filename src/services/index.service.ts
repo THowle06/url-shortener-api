@@ -67,3 +67,14 @@ export async function deleteShortUrlByCode(shortCode: string) {
     where: { shortCode },
   });
 }
+
+export async function incrementAccessCountByCode(shortCode: string) {
+  return prisma.url.update({
+    where: { shortCode },
+    data: {
+      accessCount: {
+        increment: 1,
+      },
+    },
+  });
+}

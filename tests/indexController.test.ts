@@ -101,6 +101,15 @@ describe("Index Controller", () => {
       accessCount: 10,
     });
 
+    jest.spyOn(service, "incrementAccessCountByCode").mockResolvedValueOnce({
+      id: 1,
+      url: "https://www.google.com",
+      shortCode: "abc123",
+      createdAt: new Date("2021-09-01T12:00:00Z"),
+      updatedAt: new Date("2021-09-01T12:00:00Z"),
+      accessCount: 11,
+    });
+
     await getOriginalUrl(req, res, jest.fn());
 
     expect(res.status).toHaveBeenCalledWith(200);
