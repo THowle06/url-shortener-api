@@ -3,7 +3,9 @@ import {
   createShortUrl as createShortUrlService,
   getShortUrlByCode as getShortUrlByCodeService,
   updateShortUrlByCode as updateShortUrlByCodeService,
+  deleteShortUrlByCode as deleteShortUrlByCodeService,
   getWelcome,
+  deleteShortUrlByCode,
 } from "../services/index.service";
 import { StatusCodes } from "http-status-codes";
 
@@ -135,6 +137,36 @@ export async function updateShortUrl(
       createdAt: updated.createdAt,
       updatedAt: updated.updatedAt,
     });
+  } catch (err) {
+    return next(err);
+  }
+}
+
+export async function deleteShortUrl(
+  req: Request,
+  res: Response,
+  next: NextFunction,
+) {
+  try {
+    const { shortCode } = req.params;
+
+    if (typeof shortCode !== "string" || shortCode.trim().length === 0) {
+      return res.status(StatusCodes.BAD_REQUEST).json({
+        message: "shortCode is required",
+      });
+    }
+
+    const existing = await getShortUrlByCodeService(shortCode);
+
+    if (!existing) {
+      return res.status(StatusCodes.NOT_FOUND).json({
+        message: "Short URL not found",
+      });
+    }
+
+    await deleteShortUrlByCodeService(shortCode);
+
+    return res.status(StatusCodes.NO_CONTENT).send();
   } catch (err) {
     return next(err);
   }

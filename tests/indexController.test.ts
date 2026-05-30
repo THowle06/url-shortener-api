@@ -2,6 +2,7 @@ import { Request, Response } from "express";
 import * as service from "../src/services/index.service";
 import {
   createShortUrl,
+  deleteShortUrl,
   getOriginalUrl,
   getRoot,
   updateShortUrl,
@@ -187,6 +188,62 @@ describe("Index Controller", () => {
     jest.spyOn(service, "getShortUrlByCode").mockResolvedValue(null);
 
     await updateShortUrl(req, res, jest.fn());
+
+    expect(res.status).toHaveBeenCalledWith(404);
+    expect(res.json).toHaveBeenCalledWith({
+      message: "Short URL not found",
+    });
+  });
+
+  it("deletes a short url", async () => {
+    const req = {
+      params: { shortCode: "abc123" },
+    } as unknown as Request;
+
+    const res = {
+      status: jest.fn().mockReturnThis(),
+      send: jest.fn(),
+      json: jest.fn(),
+    } as unknown as Response;
+
+    jest.spyOn(service, "getShortUrlByCode").mockResolvedValue({
+      id: 1,
+      url: "https://www.google.com",
+      shortCode: "abc123",
+      createdAt: new Date("2021-09-01T12:00:00Z"),
+      updatedAt: new Date("2021-09-01T12:00:00Z"),
+      accessCount: 10,
+    });
+
+    jest.spyOn(service, "deleteShortUrlByCode").mockResolvedValue({
+      id: 1,
+      url: "https://www.google.com",
+      shortCode: "abc123",
+      createdAt: new Date("2021-09-01T12:00:00Z"),
+      updatedAt: new Date("2021-09-01T12:00:00Z"),
+      accessCount: 10,
+    });
+
+    await deleteShortUrl(req, res, jest.fn());
+
+    expect(res.status).toHaveBeenCalledWith(204);
+    expect(res.send).toHaveBeenCalledWith();
+  });
+
+  it("returns 404 when deleting a missing short url", async () => {
+    const req = {
+      params: { shortCode: "missing1" },
+    } as unknown as Request;
+
+    const res = {
+      status: jest.fn().mockReturnThis(),
+      send: jest.fn(),
+      json: jest.fn(),
+    } as unknown as Response;
+
+    jest.spyOn(service, "getShortUrlByCode").mockResolvedValue(null);
+
+    await deleteShortUrl(req, res, jest.fn());
 
     expect(res.status).toHaveBeenCalledWith(404);
     expect(res.json).toHaveBeenCalledWith({

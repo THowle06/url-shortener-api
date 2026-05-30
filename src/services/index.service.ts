@@ -61,3 +61,9 @@ export async function updateShortUrlByCode(shortCode: string, url: string) {
     },
   });
 }
+
+export async function deleteShortUrlByCode(shortCode: string) {
+  return prisma.url.delete({
+    where: { shortCode },
+  });
+}
